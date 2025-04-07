@@ -1,4 +1,7 @@
-@import "tailwindcss";
+/* filepath: c:\Users\BSPRO\Desktop\desarrollo\Project\youtube\src\app\globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
