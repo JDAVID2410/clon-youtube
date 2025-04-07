@@ -10,8 +10,8 @@ export default function Perfil() {
   const { usuario } = useStore();
   const [titulo, setTitulo] = useState("");
   const [videoFile, setVideoFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
   const [videos, setVideos] = useState([]);
+  const [subiendo, setSubiendo] = useState(false);
 
   useEffect(() => {
     const videosRef = ref(database, "videos/");
@@ -29,34 +29,44 @@ export default function Perfil() {
     });
   }, []);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.includes("video")) {
-      setVideoFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const subirVideo = async () => {
+  const subirVideo = async (e) => {
+    e.preventDefault();
     if (!titulo || !videoFile) return alert("Faltan campos");
 
-    const nuevoVideo = {
-      title: titulo,
-      url: previewUrl, // vista previa local, no sube el archivo real
-      uid: usuario.uid,
-      created_at: new Date().toISOString(),
-      user: {
-        name: usuario.displayName,
-      },
-    };
+    setSubiendo(true);
+
+    const formData = new FormData();
+    formData.append("file", videoFile);
+    formData.append("upload_preset", "videos_app"); // ✅ tu preset sin autenticación
 
     try {
+      const res = await fetch("https://api.cloudinary.com/v1_1/dkqanprd8/video/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      const url = data.secure_url;
+
+      const nuevoVideo = {
+        title: titulo,
+        url,
+        uid: usuario.uid,
+        created_at: new Date().toISOString(),
+        user: {
+          name: usuario.displayName,
+        },
+      };
+
       await push(ref(database, "videos/"), nuevoVideo);
       setTitulo("");
       setVideoFile(null);
-      setPreviewUrl("");
+      alert("¡Video subido correctamente!");
     } catch (error) {
-      console.log("Error al subir video:", error);
+      console.error("Error al subir el video:", error);
+      alert("Error al subir video");
+    } finally {
+      setSubiendo(false);
     }
   };
 
@@ -75,8 +85,12 @@ export default function Perfil() {
     <div className="ml-72 p-6">
       <h1 className="text-2xl font-bold mb-4">YouTube Studio</h1>
 
-      <div className="bg-white p-4 rounded shadow mb-6">
+      <form
+        onSubmit={subirVideo}
+        className="bg-white p-4 rounded shadow mb-6"
+      >
         <h2 className="text-lg font-semibold mb-2">Subir nuevo video</h2>
+
         <input
           type="text"
           placeholder="Título del video"
@@ -87,26 +101,21 @@ export default function Perfil() {
 
         <input
           type="file"
-          accept="video/mp4"
-          onChange={handleFileChange}
-          className="mb-4"
+          accept="video/*"
+          onChange={(e) => setVideoFile(e.target.files[0])}
+          className="border px-4 py-2 mb-4 w-full rounded"
         />
 
-        {previewUrl && (
-          <video
-            src={previewUrl}
-            controls
-            className="w-full h-48 mb-4 rounded"
-          />
-        )}
-
         <button
-          onClick={subirVideo}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          type="submit"
+          disabled={subiendo}
+          className={`${
+            subiendo ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+          } text-white px-4 py-2 rounded`}
         >
-          Subir video
+          {subiendo ? "Subiendo..." : "Subir video"}
         </button>
-      </div>
+      </form>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {videos.map((video) => (
@@ -132,6 +141,7 @@ export default function Perfil() {
     </div>
   );
 }
+
 
 
 

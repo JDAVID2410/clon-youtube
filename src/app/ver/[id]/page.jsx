@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { ref, get } from "firebase/database";
+
 import { FaBell, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
+import { database } from "@/app/Firebase/config";
 
 export default function VerVideo() {
   const { id } = useParams();
@@ -13,13 +16,20 @@ export default function VerVideo() {
   const [suscrito, setSuscrito] = useState(false);
 
   useEffect(() => {
-    const obtenerVideos = async () => {
-      const res = await fetch("/data/videosPublicos.json");
-      const data = await res.json();
-      setVideo(data[id]);
+    const obtenerVideo = async () => {
+      try {
+        const snap = await get(ref(database, `publico/${id}`));
+        if (snap.exists()) {
+          setVideo(snap.val());
+        } else {
+          console.error("Video no encontrado");
+        }
+      } catch (err) {
+        console.error("Error al obtener el video:", err);
+      }
     };
 
-    obtenerVideos();
+    if (id) obtenerVideo();
   }, [id]);
 
   if (!video) return <p className="ml-20 p-6">Cargando video...</p>;
@@ -27,7 +37,6 @@ export default function VerVideo() {
   return (
     <div className="ml-20 p-6 bg-gray-100 min-h-screen">
       <div className="max-w-6xl mx-auto">
-        {/* Reproductor */}
         <div className="relative pb-[56.25%] mb-4">
           <video
             src={video.url}
@@ -36,12 +45,9 @@ export default function VerVideo() {
           />
         </div>
 
-        {/* Título */}
         <h1 className="text-xl font-semibold mb-4">{video.title}</h1>
 
-        {/* Controles */}
         <div className="flex flex-wrap items-center gap-4 mb-6">
-          {/* Suscribirse */}
           <button
             onClick={() => setSuscrito(!suscrito)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium shadow-sm
@@ -52,7 +58,6 @@ export default function VerVideo() {
             <IoMdArrowDropdown />
           </button>
 
-          {/* Me gusta y No me gusta */}
           <div className="flex items-center bg-gray-200 rounded-full overflow-hidden text-sm">
             <button
               onClick={() => {
@@ -80,7 +85,6 @@ export default function VerVideo() {
           </div>
         </div>
 
-        {/* Comentarios */}
         <div className="bg-white rounded-lg p-4 shadow">
           <h2 className="text-lg font-semibold mb-2">Comentarios</h2>
           <textarea

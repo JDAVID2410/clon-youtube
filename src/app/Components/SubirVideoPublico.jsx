@@ -8,6 +8,7 @@ export default function SubirVideoPublico() {
   const [titulo, setTitulo] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [subiendo, setSubiendo] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -22,15 +23,34 @@ export default function SubirVideoPublico() {
       return alert("Por favor completa todos los campos");
     }
 
-    const nuevoVideo = {
-      title: titulo,
-      url: previewUrl, 
-      tipo: "publico",
-      created_at: new Date().toISOString(),
-    };
+    setSubiendo(true);
+
+    // 1. Subir a Cloudinary
+    const formData = new FormData();
+    formData.append("file", videoFile);
+    formData.append("upload_preset", "videos_app"); // tu preset de Cloudinary
 
     try {
-      await push(ref(database, "publico/"), nuevoVideo); // se guarda en la carpeta "publico"
+      const res = await fetch("https://api.cloudinary.com/v1_1/dkqanprd8/video/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!data.secure_url) throw new Error("No se pudo obtener la URL de Cloudinary");
+
+      const nuevoVideo = {
+        title: titulo,
+        url: data.secure_url,
+        tipo: "publico",
+        created_at: new Date().toISOString(),
+      };
+
+      // 2. Guardar en Firebase
+      await push(ref(database, "publico/"), nuevoVideo);
+
+      // Reset form
       setTitulo("");
       setVideoFile(null);
       setPreviewUrl("");
@@ -38,6 +58,8 @@ export default function SubirVideoPublico() {
     } catch (error) {
       console.error("Error al subir video:", error);
       alert("Ocurrió un error al subir el video.");
+    } finally {
+      setSubiendo(false);
     }
   };
 
@@ -55,7 +77,7 @@ export default function SubirVideoPublico() {
 
       <input
         type="file"
-        accept="video/mp4"
+        accept="video/*"
         onChange={handleFileChange}
         className="mb-3"
       />
@@ -70,12 +92,16 @@ export default function SubirVideoPublico() {
 
       <button
         onClick={subirVideo}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        disabled={subiendo}
+        className={`${
+          subiendo ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+        } text-white px-4 py-2 rounded`}
       >
-        Subir video público
+        {subiendo ? "Subiendo..." : "Subir video público"}
       </button>
     </div>
   );
 }
+
 
 
