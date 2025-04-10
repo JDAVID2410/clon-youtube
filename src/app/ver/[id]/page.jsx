@@ -1,107 +1,116 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { ref, get } from "firebase/database";
+import Link from "next/link";
+import { ref, onValue } from "firebase/database";
+import { database } from "../../Firebase/config"; 
+import useSearchStore from "@/store/SearchStore";
 
-import { FaBell, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
-import { IoMdArrowDropdown } from "react-icons/io";
-import { database } from "@/app/Firebase/config";
+const API_KEY = "AIzaSyDqwptifs1jMRD4Q9dj0mjzKUPshUW7-kw"; 
 
-export default function VerVideo() {
-  const { id } = useParams();
-  const [video, setVideo] = useState(null);
-  const [like, setLike] = useState(false);
-  const [dislike, setDislike] = useState(false);
-  const [suscrito, setSuscrito] = useState(false);
+export default function VideosPublicos() {
+  const [videosFirebase, setVideosFirebase] = useState([]);
+  const [videosYoutube, setVideosYoutube] = useState([]);
+  const { searchTerm } = useSearchStore();
 
+   // Obtener videos de Firebase
   useEffect(() => {
-    const obtenerVideo = async () => {
+    const videosRef = ref(database, "publico/");
+    onValue(videosRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const videosArray = Object.entries(data).map(([id, video]) => ({
+          id,
+          ...video,
+          fuente: "firebase",
+        }));
+        setVideosFirebase(videosArray);
+      } else {
+        setVideosFirebase([]);
+      }
+    });
+  }, []);
+
+  // Obtener videos desde YouTube API
+  useEffect(() => {
+    const buscarYoutube = async () => {
       try {
-        const snap = await get(ref(database, `publico/${id}`));
-        if (snap.exists()) {
-          setVideo(snap.val());
-        } else {
-          console.error("Video no encontrado");
-        }
-      } catch (err) {
-        console.error("Error al obtener el video:", err);
+        const res = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=${searchTerm || "nextjs tutorial"}&key=${API_KEY}`
+        );
+        const data = await res.json();
+        const videos = data.items.map((item) => ({
+          id: item.id.videoId,
+          title: item.snippet.title,
+          thumbnail: item.snippet.thumbnails.medium.url,
+          fuente: "youtube",
+        }));
+        setVideosYoutube(videos);
+      } catch (error) {
+        console.error("Error al traer videos de YouTube:", error);
       }
     };
 
-    if (id) obtenerVideo();
-  }, [id]);
+    buscarYoutube();
+  }, [searchTerm]);
 
-  if (!video) return <p className="ml-20 p-6">Cargando video...</p>;
+  // Combinar ambos tipos de videos
+  const todosLosVideos = [...videosFirebase, ...videosYoutube].filter((video) =>
+    video.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="ml-20 p-6 bg-gray-100 min-h-screen">
-      <div className="max-w-6xl mx-auto">
-        <div className="relative pb-[56.25%] mb-4">
-          <video
-            src={video.url}
-            controls
-            className="absolute w-full h-full rounded-lg"
-          />
-        </div>
+    <div className="ml-72 p-6 bg-gray-100 min-h-screen">
+      <h1 className="text-2xl font-semibold mb-6">Videos recomendados</h1>
 
-        <h1 className="text-xl font-semibold mb-4">{video.title}</h1>
-
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <button
-            onClick={() => setSuscrito(!suscrito)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium shadow-sm
-              ${suscrito ? "bg-gray-200 text-black" : "bg-black text-white"}`}
-          >
-            <FaBell />
-            {suscrito ? "Suscrito" : "Suscribirse"}
-            <IoMdArrowDropdown />
-          </button>
-
-          <div className="flex items-center bg-gray-200 rounded-full overflow-hidden text-sm">
-            <button
-              onClick={() => {
-                setLike(!like);
-                if (dislike && !like) setDislike(false);
-              }}
-              className={`flex items-center gap-1 px-4 py-2 transition ${
-                like ? "bg-black text-white" : "text-black"
-              }`}
+      {todosLosVideos.length === 0 ? (
+        <p className="text-gray-500 mt-10 text-center">No se encontraron videos.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {todosLosVideos.map((video) => (
+            <Link
+              key={video.id}
+              href={
+                video.fuente === "firebase"
+                  ? `/ver/${video.id}`
+                  : `https://www.youtube.com/watch?v=${video.id}`
+              }
+              target={video.fuente === "youtube" ? "_blank" : "_self"}
+              className="bg-white rounded-xl overflow-hidden shadow hover:shadow-md transition duration-300"
             >
-              <FaThumbsUp />
-              <span>377 k</span>
-            </button>
-            <button
-              onClick={() => {
-                setDislike(!dislike);
-                if (like && !dislike) setLike(false);
-              }}
-              className={`px-4 py-2 transition ${
-                dislike ? "bg-black text-white" : "text-black"
-              }`}
-            >
-              <FaThumbsDown />
-            </button>
-          </div>
+              <div className="relative pb-[56.25%]">
+                {video.fuente === "firebase" ? (
+                  <video
+                    src={video.url}
+                    className="absolute w-full h-full object-cover"
+                    preload="metadata"
+                  />
+                ) : (
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="absolute w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div className="p-4">
+                <h2 className="text-sm font-semibold line-clamp-2">
+                  {video.title}
+                </h2>
+                {video.fuente === "firebase" && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Publicado el {new Date(video.created_at).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ))}
         </div>
-
-        <div className="bg-white rounded-lg p-4 shadow">
-          <h2 className="text-lg font-semibold mb-2">Comentarios</h2>
-          <textarea
-            placeholder="Agrega un comentario..."
-            className="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring"
-            rows={3}
-          />
-          <div className="text-right mt-2">
-            <button className="bg-black text-white px-4 py-1 rounded text-sm hover:bg-gray-800">
-              Comentar
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
+
 
 
 

@@ -14,20 +14,22 @@ export default function Perfil() {
   const [subiendo, setSubiendo] = useState(false);
 
   useEffect(() => {
+    if (!usuario) return;
+  
     const videosRef = ref(database, "videos/");
     onValue(videosRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const videosConId = Object.entries(data).map(([id, val]) => ({
-          id,
-          ...val,
-        }));
+        const videosConId = Object.entries(data)
+          .map(([id, val]) => ({ id, ...val }))
+          .filter((video) => video.uid === usuario.uid);
         setVideos(videosConId);
       } else {
         setVideos([]);
       }
     });
-  }, []);
+  }, [usuario]);
+  
 
   const subirVideo = async (e) => {
     e.preventDefault();
@@ -37,7 +39,7 @@ export default function Perfil() {
 
     const formData = new FormData();
     formData.append("file", videoFile);
-    formData.append("upload_preset", "videos_app"); // ✅ tu preset sin autenticación
+    formData.append("upload_preset", "videos_app");
 
     try {
       const res = await fetch("https://api.cloudinary.com/v1_1/dkqanprd8/video/upload", {
@@ -81,16 +83,27 @@ export default function Perfil() {
     }
   };
 
+  const inicial = usuario?.displayName?.charAt(0)?.toUpperCase();
+
   return (
     <div className="ml-72 p-6">
-      <h1 className="text-2xl font-bold mb-4">YouTube Studio</h1>
+      {/* Perfil de usuario */}
+      <div className="flex items-center mb-6">
+        <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-3xl font-bold mr-4">
+          {inicial}
+        </div>
+        <div>
+        <h2 className="text-2xl font-bold">{usuario?.displayName || "Usuario anónimo"}</h2>
+          <div className="mt-2 space-x-2">
+            <button className="bg-gray-200 px-4 py-1 rounded text-sm hover:bg-gray-300">Personalizar canal</button>
+            <button className="bg-gray-200 px-4 py-1 rounded text-sm hover:bg-gray-300">Administrar videos</button>
+          </div>
+        </div>
+      </div>
 
-      <form
-        onSubmit={subirVideo}
-        className="bg-white p-4 rounded shadow mb-6"
-      >
+      {/* Formulario de subida */}
+      <form onSubmit={subirVideo} className="bg-white p-4 rounded shadow mb-6">
         <h2 className="text-lg font-semibold mb-2">Subir nuevo video</h2>
-
         <input
           type="text"
           placeholder="Título del video"
@@ -98,14 +111,12 @@ export default function Perfil() {
           onChange={(e) => setTitulo(e.target.value)}
           className="border px-4 py-2 mb-2 w-full rounded"
         />
-
         <input
           type="file"
           accept="video/*"
           onChange={(e) => setVideoFile(e.target.files[0])}
           className="border px-4 py-2 mb-4 w-full rounded"
         />
-
         <button
           type="submit"
           disabled={subiendo}
@@ -117,11 +128,11 @@ export default function Perfil() {
         </button>
       </form>
 
+      {/* Galería de videos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {videos.map((video) => (
           <div key={video.id} className="bg-gray-100 p-3 rounded shadow">
             <video src={video.url} controls className="w-full h-48 rounded" />
-
             <div className="flex justify-between items-center mt-2">
               <div>
                 <p className="font-semibold">{video.title}</p>
@@ -133,7 +144,6 @@ export default function Perfil() {
                 <FiTrash2 size={18} className="text-red-600 hover:text-red-800" />
               </button>
             </div>
-
             <p className="text-sm text-gray-600 mt-1">Por: {video.user?.name}</p>
           </div>
         ))}
@@ -141,16 +151,3 @@ export default function Perfil() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

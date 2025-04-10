@@ -1,61 +1,54 @@
-[
-    {
-      "title": "Video 1 - Big Buck Bunny",
-      "url": "https://www.w3schools.com/html/mov_bbb.mp4",
-      "created_at": "2025-04-01T10:00:00Z"
-    },
-    {
-      "title": "Video 2 - Sintel Trailer",
-      "url": "https://media.w3.org/2010/05/sintel/trailer.mp4",
-      "created_at": "2025-04-01T10:10:00Z"
-    },
-    {
-      "title": "Video 3 - Sample Video",
-      "url": "https://media.w3.org/2010/05/video/movie_300.mp4",
-      "created_at": "2025-04-01T10:20:00Z"
-    },
-   
-    {
-      "title": "Video 8 - Small Sample",
-      "url": "https://samplelib.com/lib/preview/mp4/sample-5s.mp4",
-      "created_at": "2025-04-01T11:10:00Z"
-    },
-    {
-      "title": "Video 9 - Medium Sample",
-      "url": "https://samplelib.com/lib/preview/mp4/sample-10s.mp4",
-      "created_at": "2025-04-01T11:20:00Z"
-    },
-    {
-      "title": "Video 10 - Landscape",
-      "url": "https://samplelib.com/lib/preview/mp4/sample-15s.mp4",
-      "created_at": "2025-04-01T11:30:00Z"
-    },
-    {
-      "title": "Video 11 - A Day at Sea",
-      "url": "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
-      "created_at": "2025-04-01T11:40:00Z"
-    },
-    {
-      "title": "Video 12 - Bike Ride",
-      "url": "https://filesamples.com/samples/video/mp4/sample_640x360.mp4",
-      "created_at": "2025-04-01T11:50:00Z"
-    },
-    
-    {
-      "title": "Video 17 - Animation",
-      "url": "https://www.w3schools.com/html/movie.mp4",
-      "created_at": "2025-04-01T12:40:00Z"
-    },
-    {
-      "title": "Video 18 - Color Bars",
-      "url": "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4",
-      "created_at": "2025-04-01T12:50:00Z"
-    },
-    
-    {
-      "title": "Video 23 - Rainy Day",
-      "url": "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
-      "created_at": "2025-04-01T13:40:00Z"
+{
+  "video1": {
+    "title": "Viaje a la montaña",
+    "url": "https://res.cloudinary.com/dkqanprd8/video/upload/v1712356033/viaje_montana.mp4",
+    "uid": "user123",
+    "tipo": "video",
+    "created_at": "2025-04-08T10:00:00.000Z",
+    "user": {
+      "name": "Carlos"
     }
-   
-  ]
+  },
+  "video2": {
+    "title": "Mi gato jugando",
+    "url": "https://res.cloudinary.com/dkqanprd8/video/upload/v1712356033/gato_jugando.mp4",
+    "uid": "user456",
+    "tipo": "video",
+    "created_at": "2025-04-07T14:30:00.000Z",
+    "user": {
+      "name": "Ana"
+    }
+  },
+  "short1": {
+    "title": "Short: Café en 15 segundos",
+    "url": "https://res.cloudinary.com/dkqanprd8/video/upload/v1712356033/short_cafe.mp4",
+    "uid": "user789",
+    "tipo": "short",
+    "created_at": "2025-04-09T08:15:00.000Z",
+    "user": {
+      "name": "Luis"
+    }
+  },
+  "short2": {
+    "title": "Short: Truco de magia",
+    "url": "https://res.cloudinary.com/dkqanprd8/video/upload/v1712356033/short_magia.mp4",
+    "uid": "user321",
+    "tipo": "short",
+    "created_at": "2025-04-09T09:45:00.000Z",
+    "user": {
+      "name": "Laura"
+    }
+  },
+  "short3": {
+    "title": "Short: Risa de bebé",
+    "url": "https://res.cloudinary.com/dkqanprd8/video/upload/v1712356033/short_bebe.mp4",
+    "uid": "user654",
+    "tipo": "short",
+    "created_at": "2025-04-09T11:00:00.000Z",
+    "user": {
+      "name": "Tomás"
+    }
+  }
+}
+
+
